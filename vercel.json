@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/ingest-reddit",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/classify-signals",
+      "schedule": "2-59/5 * * * *"
+    },
+    {
+      "path": "/api/cron/sync-subscriptions",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
