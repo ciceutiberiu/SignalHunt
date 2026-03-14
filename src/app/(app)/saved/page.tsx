@@ -57,6 +57,14 @@ export default function SavedPage() {
     }
   };
 
+  const handleDelete = async (signalId: string) => {
+    const res = await fetch(`/api/signals/${signalId}/status`, { method: "DELETE" });
+    if (res.ok) {
+      setSignals((prev) => prev.filter((s) => s.id !== signalId));
+      toast({ title: "Signal deleted" });
+    }
+  };
+
   const handleSort = (field: string) => {
     if (field === sortField) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("desc"); }
@@ -84,6 +92,7 @@ export default function SavedPage() {
             signals={signals}
             onSelect={setSelectedSignal}
             onUpdateStatus={handleUpdateStatus}
+            onDelete={handleDelete}
             sortField={sortField}
             sortDir={sortDir}
             onSort={handleSort}
