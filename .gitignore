@@ -32,3 +32,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase
+supabase/.temp/
+
+# marketing
+x-posts-signalhunt.md
+
+# claude
+.claude/
