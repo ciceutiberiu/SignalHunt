@@ -8,7 +8,8 @@ import { Filters } from "@/components/signals/filters";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatsSkeleton, TableSkeleton } from "@/components/shared/loading-skeleton";
 import { useToast } from "@/components/ui/toast";
-import { BarChart3, Zap, Bookmark, Inbox } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart3, Zap, Bookmark, Inbox, RefreshCw } from "lucide-react";
 import type { SignalStatus } from "@/lib/utils/constants";
 
 interface Stats {
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [sortField, setSortField] = useState("reddit_created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -98,6 +100,24 @@ export default function DashboardPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/signals/refresh", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        toast({ title: `Scan complete: ${data.signals_created ?? 0} new signals found` });
+        await fetchData();
+      } else {
+        toast({ title: "Refresh failed", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Refresh failed", variant: "destructive" });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleDelete = async (signalId: string) => {
     const res = await fetch(`/api/signals/${signalId}/status`, { method: "DELETE" });
     if (res.ok) {
@@ -124,9 +144,15 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Your intent signals at a glance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Your intent signals at a glance</p>
+        </div>
+        <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Scanning..." : "Scan Reddit"}
+        </Button>
       </div>
 
       {loading ? (
