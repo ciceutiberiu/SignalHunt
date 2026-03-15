@@ -14,7 +14,7 @@ export interface Database {
           id: string;
           email: string;
           display_name: string | null;
-          plan: "free" | "pro";
+          plan: "free" | "starter" | "pro";
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           subscription_status: string | null;
@@ -26,7 +26,7 @@ export interface Database {
           id: string;
           email: string;
           display_name?: string | null;
-          plan?: "free" | "pro";
+          plan?: "free" | "starter" | "pro";
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           subscription_status?: string | null;
@@ -38,7 +38,7 @@ export interface Database {
           id?: string;
           email?: string;
           display_name?: string | null;
-          plan?: "free" | "pro";
+          plan?: "free" | "starter" | "pro";
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           subscription_status?: string | null;

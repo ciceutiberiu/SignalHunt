@@ -73,6 +73,8 @@ function BillingContent() {
     );
   }
 
+  const isPaid = billing?.plan === "starter" || billing?.plan === "pro";
+
   return (
     <div className="space-y-6">
       <div>
@@ -97,8 +99,8 @@ function BillingContent() {
             <p className="text-sm text-muted-foreground">
               Keyword limit: {billing.keywordLimit}
             </p>
-            {billing.plan === "free" ? (
-              <Button onClick={handleCheckout}>Upgrade to Pro - $29/mo</Button>
+            {!isPaid ? (
+              <Button onClick={handleCheckout}>Upgrade Now</Button>
             ) : (
               <Button variant="outline" onClick={handlePortal}>
                 Manage Subscription
@@ -108,7 +110,7 @@ function BillingContent() {
         </Card>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-2xl">
+      <div className="grid md:grid-cols-3 gap-6 max-w-4xl">
         <PlanCard
           name="Free"
           price={0}
@@ -119,15 +121,28 @@ function BillingContent() {
             "Basic dashboard",
             "5-minute updates",
           ]}
-          onSelect={billing?.plan === "free" ? undefined : undefined}
+        />
+        <PlanCard
+          name="Starter"
+          price={9}
+          isCurrent={billing?.plan === "starter"}
+          features={[
+            "5 keywords to track",
+            "AI intent scoring",
+            "Full dashboard & filters",
+            "5-minute updates",
+            "Save & track signals",
+          ]}
+          onSelect={billing?.plan === "free" ? handleCheckout : undefined}
+          buttonLabel="Upgrade to Starter"
         />
         <PlanCard
           name="Pro"
-          price={29}
+          price={19}
           isPopular
           isCurrent={billing?.plan === "pro"}
           features={[
-            "Up to 50 keywords",
+            "25 keywords to track",
             "AI intent scoring",
             "Full dashboard & filters",
             "5-minute updates",
@@ -135,7 +150,7 @@ function BillingContent() {
             "Notes & status tracking",
             "Priority support",
           ]}
-          onSelect={billing?.plan === "free" ? handleCheckout : undefined}
+          onSelect={!isPaid || billing?.plan === "starter" ? handleCheckout : undefined}
           buttonLabel="Upgrade to Pro"
         />
       </div>

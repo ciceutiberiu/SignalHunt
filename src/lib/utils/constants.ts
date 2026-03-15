@@ -4,12 +4,19 @@ export const PLANS = {
     keywordLimit: 1,
     price: 0,
   },
+  starter: {
+    name: "Starter",
+    keywordLimit: 5,
+    price: 9,
+  },
   pro: {
     name: "Pro",
-    keywordLimit: 50,
-    price: 29,
+    keywordLimit: 25,
+    price: 19,
   },
 } as const;
+
+export type PlanKey = keyof typeof PLANS;
 
 export const SIGNAL_STATUSES = [
   "new",

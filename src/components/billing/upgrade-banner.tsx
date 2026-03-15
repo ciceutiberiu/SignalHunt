@@ -15,7 +15,7 @@ export function UpgradeBanner({ onUpgrade }: UpgradeBannerProps) {
         <div>
           <p className="text-sm font-medium">Upgrade to Pro</p>
           <p className="text-xs text-muted-foreground">
-            Track up to 50 keywords and unlock all features.
+            Track up to 25 keywords and unlock all features.
           </p>
         </div>
       </div>

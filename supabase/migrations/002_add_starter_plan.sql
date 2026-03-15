@@ -1,0 +1,3 @@
+-- Add 'starter' to the plan check constraint
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_plan_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_plan_check CHECK (plan IN ('free', 'starter', 'pro'));
