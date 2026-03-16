@@ -8,46 +8,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { RadarFoxLogo } from "@/components/shared/radar-fox-logo";
 import { createClient } from "@/lib/supabase/client";
 
-export default function SignupPage() {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
 
     if (error) {
       setError(error.message);
-    } else if (data.user?.identities?.length === 0) {
-      // Supabase returns a fake success for existing emails — detect it
-      setError("An account with this email already exists. Please log in instead.");
     } else {
       setSuccess(true);
     }
     setLoading(false);
-  };
-
-  const handleGoogleSignup = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
   };
 
   if (success) {
@@ -60,10 +42,17 @@ export default function SignupPage() {
             </div>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
-              We sent a confirmation link to <strong>{email}</strong>. Click the link to activate
-              your account.
+              We sent a password reset link to <strong>{email}</strong>.
+              Click the link to reset your password.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <p className="text-center text-sm text-muted-foreground">
+              <Link href="/login" className="text-primary hover:underline">
+                Back to login
+              </Link>
+            </p>
+          </CardContent>
         </Card>
       </div>
     );
@@ -76,11 +65,13 @@ export default function SignupPage() {
           <div className="flex justify-center mb-4">
             <RadarFoxLogo size="md" />
           </div>
-          <CardTitle>Create your account</CardTitle>
-          <CardDescription>Start hunting for intent signals today</CardDescription>
+          <CardTitle>Reset your password</CardTitle>
+          <CardDescription>
+            Enter your email and we&apos;ll send you a reset link
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleReset} className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Email</label>
               <Input
@@ -91,38 +82,14 @@ export default function SignupPage() {
                 required
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Password</label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                minLength={6}
-                required
-              />
-            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Sign up"}
+              {loading ? "Sending..." : "Send reset link"}
             </Button>
           </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">or</span>
-            </div>
-          </div>
-
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignup}>
-            Continue with Google
-          </Button>
-
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Already have an account?{" "}
+            Remember your password?{" "}
             <Link href="/login" className="text-primary hover:underline">
               Log in
             </Link>
