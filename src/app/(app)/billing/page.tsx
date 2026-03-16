@@ -30,7 +30,7 @@ function BillingContent() {
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
-      toast({ title: "Upgrade successful! Welcome to Pro." });
+      toast({ title: "Upgrade successful! Your plan is now active." });
     }
     if (searchParams.get("canceled") === "true") {
       toast({ title: "Checkout canceled", variant: "destructive" });
@@ -44,8 +44,12 @@ function BillingContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCheckout = async () => {
-    const res = await fetch("/api/billing/create-checkout", { method: "POST" });
+  const handleCheckout = async (plan: "starter" | "pro" = "starter") => {
+    const res = await fetch("/api/billing/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
     if (res.ok) {
       const { url } = await res.json();
       window.location.href = url;
@@ -100,7 +104,7 @@ function BillingContent() {
               Keyword limit: {billing.keywordLimit}
             </p>
             {!isPaid ? (
-              <Button onClick={handleCheckout}>Upgrade Now</Button>
+              <Button onClick={() => handleCheckout("starter")}>Upgrade Now</Button>
             ) : (
               <Button variant="outline" onClick={handlePortal}>
                 Manage Subscription
@@ -133,7 +137,7 @@ function BillingContent() {
             "5-minute updates",
             "Save & track signals",
           ]}
-          onSelect={billing?.plan === "free" ? handleCheckout : undefined}
+          onSelect={billing?.plan === "free" ? () => handleCheckout("starter") : undefined}
           buttonLabel="Upgrade to Starter"
         />
         <PlanCard
@@ -150,7 +154,7 @@ function BillingContent() {
             "Notes & status tracking",
             "Priority support",
           ]}
-          onSelect={!isPaid || billing?.plan === "starter" ? handleCheckout : undefined}
+          onSelect={!isPaid || billing?.plan === "starter" ? () => handleCheckout("pro") : undefined}
           buttonLabel="Upgrade to Pro"
         />
       </div>
