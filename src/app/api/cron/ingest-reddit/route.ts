@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { searchReddit } from "@/lib/reddit/client";
 import { verifyCronAuth } from "@/lib/utils/cron-auth";
+import type { RedditPost } from "@/lib/reddit/types";
+
+function isLikelyNoise(post: RedditPost): boolean {
+  const title = (post.title || "").toLowerCase();
+  const body = (post.selftext || "").toLowerCase();
+  const combined = `${title} ${body}`;
+  if (/\b(i built|i made|i created|check out my|just launched|show ?hn|side project)\b/.test(combined)) return true;
+  if (post.link_flair_text && /meme|joke|shitpost|humor/i.test(post.link_flair_text)) return true;
+  if (post.author === "[deleted]" || post.selftext === "[removed]") return true;
+  return false;
+}
 
 export async function GET(request: NextRequest) {
   const authError = verifyCronAuth(request);
@@ -17,28 +28,38 @@ export async function GET(request: NextRequest) {
     // Get all distinct active keywords
     const { data: keywords } = await supabase
       .from("keywords")
-      .select("keyword, user_id")
+      .select("keyword, user_id, subreddits")
       .eq("is_active", true);
 
     if (!keywords?.length) {
       return NextResponse.json({ message: "No active keywords" });
     }
 
-    // Group users by keyword
+    // Group users and subreddits by keyword
     const keywordUsers = new Map<string, string[]>();
+    const keywordSubreddits = new Map<string, string[]>();
     for (const kw of keywords) {
       const users = keywordUsers.get(kw.keyword) || [];
       users.push(kw.user_id);
       keywordUsers.set(kw.keyword, users);
+
+      // Merge subreddits from all users tracking this keyword
+      if (kw.subreddits) {
+        const existing = keywordSubreddits.get(kw.keyword) || [];
+        const subs = kw.subreddits.split(",").map((s: string) => s.trim()).filter(Boolean);
+        keywordSubreddits.set(kw.keyword, [...new Set([...existing, ...subs])]);
+      }
     }
 
     // Process up to 10 distinct keywords per run
     const uniqueKeywords = Array.from(keywordUsers.keys()).slice(0, 10);
 
     for (const keyword of uniqueKeywords) {
+      const subreddits = keywordSubreddits.get(keyword);
       try {
-        const posts = await searchReddit(keyword, { limit: 25 });
+        const rawPosts = await searchReddit(keyword, { limit: 25, subreddits });
         keywordsProcessed++;
+        const posts = rawPosts.filter((p) => !isLikelyNoise(p));
 
         for (const post of posts) {
           // Insert signal (dedup by reddit_post_id)

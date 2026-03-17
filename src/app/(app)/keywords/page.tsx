@@ -14,6 +14,7 @@ interface Keyword {
   id: string;
   keyword: string;
   is_active: boolean;
+  subreddits: string | null;
   created_at: string;
 }
 
@@ -43,11 +44,11 @@ export default function KeywordsPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleAdd = async (keyword: string): Promise<boolean> => {
+  const handleAdd = async (keyword: string, subreddits?: string): Promise<boolean> => {
     const res = await fetch("/api/keywords", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ keyword }),
+      body: JSON.stringify({ keyword, subreddits }),
     });
 
     if (res.ok) {

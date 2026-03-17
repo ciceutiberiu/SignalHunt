@@ -8,6 +8,7 @@ interface Keyword {
   id: string;
   keyword: string;
   is_active: boolean;
+  subreddits: string | null;
   created_at: string;
 }
 
@@ -24,13 +25,18 @@ export function KeywordList({ keywords, onDelete }: KeywordListProps) {
           key={kw.id}
           className="flex items-center justify-between rounded-lg border px-4 py-3"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Search className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">{kw.keyword}</span>
             {kw.is_active ? (
               <Badge variant="secondary" className="text-xs">Active</Badge>
             ) : (
               <Badge variant="outline" className="text-xs">Paused</Badge>
+            )}
+            {kw.subreddits && (
+              <span className="text-xs text-muted-foreground">
+                in r/{kw.subreddits.split(",").join(", r/")}
+              </span>
             )}
           </div>
           <Button

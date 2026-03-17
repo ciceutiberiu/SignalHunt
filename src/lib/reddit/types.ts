@@ -11,6 +11,7 @@ export interface RedditPost {
   ups: number;
   num_comments: number;
   is_self: boolean;
+  link_flair_text: string | null;
 }
 
 export interface RedditSearchResponse {

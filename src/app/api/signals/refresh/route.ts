@@ -4,6 +4,25 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { searchReddit } from "@/lib/reddit/client";
 import { classifySignals } from "@/lib/ai/classify";
 import { rateLimit } from "@/lib/utils/rate-limit";
+import type { RedditPost } from "@/lib/reddit/types";
+
+// Filter out obvious noise before wasting AI credits on classification
+function isLikelyNoise(post: RedditPost): boolean {
+  const title = (post.title || "").toLowerCase();
+  const body = (post.selftext || "").toLowerCase();
+  const combined = `${title} ${body}`;
+
+  // Self-promotion / show-and-tell
+  if (/\b(i built|i made|i created|check out my|just launched|show ?hn|side project)\b/.test(combined)) return true;
+
+  // Memes, jokes, shitposts
+  if (post.link_flair_text && /meme|joke|shitpost|humor/i.test(post.link_flair_text)) return true;
+
+  // Deleted or removed posts
+  if (post.author === "[deleted]" || post.selftext === "[removed]") return true;
+
+  return false;
+}
 
 export async function POST() {
   const supabase = await createClient();
@@ -19,7 +38,7 @@ export async function POST() {
   // Get this user's active keywords
   const { data: keywords } = await admin
     .from("keywords")
-    .select("keyword")
+    .select("keyword, subreddits")
     .eq("user_id", user.id)
     .eq("is_active", true);
 
@@ -30,9 +49,14 @@ export async function POST() {
   let signalsCreated = 0;
   const newSignalIds: string[] = [];
 
-  for (const { keyword } of keywords.slice(0, 5)) {
+  for (const kw of keywords.slice(0, 5)) {
+    const keyword = kw.keyword;
+    const subreddits = kw.subreddits
+      ? kw.subreddits.split(",").map((s: string) => s.trim()).filter(Boolean)
+      : undefined;
     try {
-      const posts = await searchReddit(keyword, { limit: 10 });
+      const rawPosts = await searchReddit(keyword, { limit: 10, subreddits });
+      const posts = rawPosts.filter((p) => !isLikelyNoise(p));
 
       for (const post of posts) {
         const { data: signal, error: insertError } = await admin
@@ -92,7 +116,7 @@ export async function POST() {
     try {
       const { data: unclassified } = await admin
         .from("signals")
-        .select("id, title, body, subreddit")
+        .select("id, title, body, subreddit, upvotes, num_comments")
         .in("id", newSignalIds)
         .is("classified_at", null)
         .limit(20);

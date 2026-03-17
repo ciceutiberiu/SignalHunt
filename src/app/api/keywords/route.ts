@@ -21,10 +21,17 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { keyword } = await request.json();
+  const body = await request.json();
+  const keyword = body.keyword;
+  const subreddits = body.subreddits; // optional comma-separated string
   if (!keyword || typeof keyword !== "string" || keyword.trim().length === 0) {
     return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
   }
+
+  // Validate subreddits format if provided
+  const cleanSubreddits = subreddits && typeof subreddits === "string"
+    ? subreddits.split(",").map((s: string) => s.trim().replace(/^r\//, "")).filter(Boolean).join(",")
+    : null;
 
   // Check plan limit
   const { data: profile } = await supabase
@@ -47,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("keywords")
-    .insert({ user_id: user.id, keyword: keyword.trim().toLowerCase() })
+    .insert({ user_id: user.id, keyword: keyword.trim().toLowerCase(), subreddits: cleanSubreddits })
     .select()
     .single();
 

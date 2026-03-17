@@ -28,10 +28,39 @@ async function rateLimitedFetch(url: string): Promise<Response> {
 
 export async function searchReddit(
   keyword: string,
-  options: { limit?: number; sort?: string; t?: string } = {}
+  options: { limit?: number; sort?: string; t?: string; subreddits?: string[] } = {}
 ): Promise<RedditPost[]> {
-  const { limit = 25, sort = "new", t = "day" } = options;
+  const { limit = 25, sort = "new", t = "day", subreddits } = options;
 
+  // If subreddits specified, search within each one; otherwise search globally
+  if (subreddits && subreddits.length > 0) {
+    const allPosts: RedditPost[] = [];
+    const perSubLimit = Math.max(5, Math.floor(limit / subreddits.length));
+
+    for (const sub of subreddits.slice(0, 5)) {
+      const params = new URLSearchParams({
+        q: keyword,
+        sort,
+        t,
+        limit: perSubLimit.toString(),
+        restrict_sr: "true",
+        type: "link",
+      });
+
+      const response = await rateLimitedFetch(
+        `https://www.reddit.com/r/${encodeURIComponent(sub)}/search.json?${params}`
+      );
+
+      if (response.ok) {
+        const data: RedditSearchResponse = await response.json();
+        allPosts.push(...data.data.children.map((child) => child.data));
+      }
+    }
+
+    return allPosts;
+  }
+
+  // Global search (no subreddit filter)
   const params = new URLSearchParams({
     q: keyword,
     sort,
