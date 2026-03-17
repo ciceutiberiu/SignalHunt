@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { SignalHero } from "@/components/ui/signal-hero";
 import { Pricing } from "@/components/ui/pricing-cards";
-import { FeatureSteps } from "@/components/ui/feature-section";
+import { FeaturesSectionWithHoverEffects } from "@/components/ui/feature-section-with-hover-effects";
 import Link from "next/link";
 import {
   Search,
@@ -14,41 +14,16 @@ import {
   Bookmark,
   TrendingUp,
 } from "lucide-react";
-
-const features = [
-  {
-    step: "Step 1",
-    title: "Smart Reddit Scanning",
-    content:
-      "Add your keywords and we scan Reddit 24/7. Target specific subreddits or search globally — your signals, your rules.",
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1000&h=500&fit=crop",
-  },
-  {
-    step: "Step 2",
-    title: "AI-Powered Intent Scoring",
-    content:
-      "Claude AI reads every post and scores real buying intent from 0-100. No more wading through noise — only hot leads surface.",
-    image:
-      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1000&h=500&fit=crop",
-  },
-  {
-    step: "Step 3",
-    title: "Actionable Dashboard",
-    content:
-      "Filter by intent level, keyword, or subreddit. Save leads, add notes, and track your outreach — all in one place.",
-    image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&h=500&fit=crop",
-  },
-  {
-    step: "Step 4",
-    title: "First-Responder Advantage",
-    content:
-      "Get signals within minutes of posting. Reply first, build trust, and convert warm leads before your competitors even notice.",
-    image:
-      "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1000&h=500&fit=crop",
-  },
-];
+import {
+  IconRadar,
+  IconBolt,
+  IconChartBar,
+  IconTargetArrow,
+  IconClock,
+  IconFilter,
+  IconBell,
+  IconShieldCheck,
+} from "@tabler/icons-react";
 
 export default function LandingPage() {
   return (
@@ -153,11 +128,59 @@ export default function LandingPage() {
 
       {/* Features */}
       <section id="features" className="py-24">
-        <FeatureSteps
-          features={features}
+        <FeaturesSectionWithHoverEffects
           title="Everything You Need to Capture Intent"
-          autoPlayInterval={4000}
-          imageHeight="h-[400px]"
+          subtitle="Set your keywords and let SignalHunt do the hunting. AI-powered, built for speed."
+          features={[
+            {
+              title: "Smart Reddit Scanning",
+              description:
+                "Monitors Reddit 24/7 for posts matching your keywords. Target specific subreddits or search globally.",
+              icon: <IconRadar className="h-6 w-6" />,
+            },
+            {
+              title: "AI Intent Scoring",
+              description:
+                "Claude AI analyzes each post and scores buying intent from 0-100. Focus only on hot leads, skip the noise.",
+              icon: <IconBolt className="h-6 w-6" />,
+            },
+            {
+              title: "Actionable Dashboard",
+              description:
+                "Filter by intent level, keyword, or subreddit. Save leads, add notes, and track your outreach.",
+              icon: <IconChartBar className="h-6 w-6" />,
+            },
+            {
+              title: "Keyword Tracking",
+              description:
+                "Track what matters to your business. Free users get 1 keyword, Pro gets up to 25 with subreddit targeting.",
+              icon: <IconTargetArrow className="h-6 w-6" />,
+            },
+            {
+              title: "First-Responder Advantage",
+              description:
+                "Get signals within minutes of posting. Reply first and convert leads before your competitors notice.",
+              icon: <IconClock className="h-6 w-6" />,
+            },
+            {
+              title: "Noise Reduction",
+              description:
+                "Pre-filters self-promotion, memes, and deleted posts. Strict AI scoring separates research from real buying intent.",
+              icon: <IconFilter className="h-6 w-6" />,
+            },
+            {
+              title: "Smart Deduplication",
+              description:
+                "Never see the same post twice. Intelligent dedup across all your keywords and scans.",
+              icon: <IconShieldCheck className="h-6 w-6" />,
+            },
+            {
+              title: "Real-Time Alerts",
+              description:
+                "Get notified when high-intent signals appear. Never miss a warm lead asking for what you offer.",
+              icon: <IconBell className="h-6 w-6" />,
+            },
+          ]}
         />
       </section>
 
