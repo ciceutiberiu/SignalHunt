@@ -1,14 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { SignalHero } from "@/components/ui/signal-hero";
 import { Pricing } from "@/components/ui/pricing-cards";
+import { FeatureSteps } from "@/components/ui/feature-section";
 import Link from "next/link";
 import {
   Search,
   Zap,
-  BarChart3,
   Target,
-  Clock,
-  Bell,
   ChevronDown,
   CheckCircle2,
   Radar,
@@ -16,6 +14,41 @@ import {
   Bookmark,
   TrendingUp,
 } from "lucide-react";
+
+const features = [
+  {
+    step: "Step 1",
+    title: "Smart Reddit Scanning",
+    content:
+      "Add your keywords and we scan Reddit 24/7. Target specific subreddits or search globally — your signals, your rules.",
+    image:
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1000&h=500&fit=crop",
+  },
+  {
+    step: "Step 2",
+    title: "AI-Powered Intent Scoring",
+    content:
+      "Claude AI reads every post and scores real buying intent from 0-100. No more wading through noise — only hot leads surface.",
+    image:
+      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1000&h=500&fit=crop",
+  },
+  {
+    step: "Step 3",
+    title: "Actionable Dashboard",
+    content:
+      "Filter by intent level, keyword, or subreddit. Save leads, add notes, and track your outreach — all in one place.",
+    image:
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&h=500&fit=crop",
+  },
+  {
+    step: "Step 4",
+    title: "First-Responder Advantage",
+    content:
+      "Get signals within minutes of posting. Reply first, build trust, and convert warm leads before your competitors even notice.",
+    image:
+      "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1000&h=500&fit=crop",
+  },
+];
 
 export default function LandingPage() {
   return (
@@ -120,69 +153,12 @@ export default function LandingPage() {
 
       {/* Features */}
       <section id="features" className="py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Everything You Need to
-              <span className="gradient-text"> Capture Intent</span>
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-              Set your keywords and let SignalHunt do the hunting. AI-powered,
-              built for speed.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Search,
-                title: "Smart Reddit Scanning",
-                desc: "Monitors Reddit every 5 minutes for posts matching your keywords. Never miss a potential lead.",
-              },
-              {
-                icon: Zap,
-                title: "AI Intent Scoring",
-                desc: "Claude AI analyzes each post and scores buying intent from 0-100. Focus only on hot leads.",
-              },
-              {
-                icon: BarChart3,
-                title: "Actionable Dashboard",
-                desc: "Filter by intent, keyword, subreddit. Save leads, add notes, track your outreach.",
-              },
-              {
-                icon: Target,
-                title: "Keyword Tracking",
-                desc: "Track what matters to your business. Free users get 1 keyword, Pro gets up to 25.",
-              },
-              {
-                icon: Clock,
-                title: "First-Responder Advantage",
-                desc: "Get signals within minutes of posting. Reply first and convert more leads.",
-              },
-              {
-                icon: Bell,
-                title: "Smart Deduplication",
-                desc: "Never see the same post twice. Intelligent dedup across all your keywords.",
-              },
-            ].map((feature) => (
-              <Card
-                key={feature.title}
-                className="card-hover group border-transparent bg-gray-50/80 hover:bg-white hover:border-border"
-              >
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center mb-3 group-hover:from-orange-200 group-hover:to-amber-100 transition-colors">
-                    <feature.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {feature.desc}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <FeatureSteps
+          features={features}
+          title="Everything You Need to Capture Intent"
+          autoPlayInterval={4000}
+          imageHeight="h-[400px]"
+        />
       </section>
 
       {/* How It Works */}
