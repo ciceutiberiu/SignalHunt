@@ -111,10 +111,11 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
     }
   }
 
-  // Send branded invite email via Resend for new users
+  // Send branded welcome email via Resend for new users
   if (!existingUser) {
+    // Use recovery link so user can set their password on first login
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: "invite",
+      type: "recovery",
       email: customerEmail,
       options: {
         redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
@@ -122,10 +123,18 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
     });
 
     if (linkError || !linkData?.properties?.action_link) {
-      throw new Error(`Failed to generate invite link: ${linkError?.message || "no link returned"}`);
+      throw new Error(`Failed to generate link: ${linkError?.message || "no link returned"}`);
     }
 
-    await sendWelcomeInviteEmail(customerEmail, linkData.properties.action_link, plan);
+    const { error: emailError } = await sendWelcomeInviteEmail(
+      customerEmail,
+      linkData.properties.action_link,
+      plan,
+    );
+
+    if (emailError) {
+      throw new Error(`Failed to send email via Resend: ${JSON.stringify(emailError)}`);
+    }
   }
 }
 
