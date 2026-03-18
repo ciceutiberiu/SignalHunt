@@ -37,6 +37,8 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
   const customerEmail = session.customer_details?.email;
   if (!customerEmail) return;
 
+  const appUrl = process.env.APP_URL || "https://signal-hunt-fawn.vercel.app";
+
   // Check if user already exists
   const { data: existingUsers } = await supabase.auth.admin.listUsers();
   const existingUser = existingUsers?.users?.find(
@@ -46,20 +48,21 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
   let targetUserId: string;
 
   if (existingUser) {
+    // Existing user — just upgrade their plan
     targetUserId = existingUser.id;
   } else {
-    // Create new user (confirmed, no password — they'll use magic link)
-    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email: customerEmail,
-      email_confirm: true,
-    });
+    // New user — invite sends a "Set up your account" email automatically
+    const { data: invited, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+      customerEmail,
+      { redirectTo: `${appUrl}/auth/callback?next=/dashboard` }
+    );
 
-    if (createError || !newUser.user) {
-      console.error("Failed to create user:", createError);
+    if (inviteError || !invited.user) {
+      console.error("Failed to invite user:", inviteError);
       return;
     }
 
-    targetUserId = newUser.user.id;
+    targetUserId = invited.user.id;
 
     // Wait briefly for the DB trigger to create the profile
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -76,16 +79,6 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
       keyword_limit: PLANS[plan].keywordLimit,
     })
     .eq("id", targetUserId);
-
-  // Send magic link so the user can log in
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://signal-hunt-fawn.vercel.app";
-  await supabase.auth.admin.generateLink({
-    type: "magiclink",
-    email: customerEmail,
-    options: {
-      redirectTo: `${appUrl}/auth/callback?next=/dashboard`,
-    },
-  });
 }
 
 export async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
