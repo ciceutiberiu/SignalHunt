@@ -43,8 +43,8 @@ export default function LandingPage() {
         highlightedText="Let Them Find You."
         subtitle="SignalHunt scans Reddit 24/7 and uses AI to find people actively searching for tools like yours. Get notified when someone needs what you offer."
         ctaButton={{
-          label: "Start Free",
-          href: "/signup",
+          label: "See Plans",
+          href: "#pricing",
         }}
         secondaryButton={{
           label: "See How It Works",
@@ -76,11 +76,11 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-6 md:gap-12 text-sm text-white/40 px-4">
             <span className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-orange-500/60" />
-              Free forever plan
+              Plans from $9/mo
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-orange-500/60" />
-              No credit card required
+              Cancel anytime
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-orange-500/60" />
@@ -153,7 +153,7 @@ export default function LandingPage() {
             {
               title: "Keyword Tracking",
               description:
-                "Track what matters to your business. Free users get 1 keyword, Pro gets up to 25 with subreddit targeting.",
+                "Track what matters to your business. Starter gets 5 keywords, Pro gets up to 25 with subreddit targeting.",
               icon: <IconTargetArrow className="h-6 w-6" />,
             },
             {
@@ -201,8 +201,8 @@ export default function LandingPage() {
             {[
               {
                 step: "1",
-                title: "Add Your Keywords",
-                desc: "Tell us what you offer — CRM, project management, web design, anything. We start scanning Reddit immediately.",
+                title: "Pick a Plan & Add Keywords",
+                desc: "Choose Starter or Pro, tell us what you offer — CRM, project management, web design. We start scanning Reddit immediately.",
               },
               {
                 step: "2",
@@ -348,9 +348,9 @@ export default function LandingPage() {
             Every minute you wait, someone else replies first. Start hunting for
             intent signals today.
           </p>
-          <Link href="/signup">
+          <Link href="#pricing">
             <button className="bg-white text-orange-600 hover:bg-gray-100 text-base px-10 h-12 rounded-lg font-medium shadow-xl shadow-orange-900/20 inline-flex items-center gap-2 transition-colors">
-              Get Started Free
+              See Plans
               <svg
                 className="w-4 h-4"
                 fill="none"

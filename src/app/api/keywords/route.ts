@@ -36,9 +36,16 @@ export async function POST(request: NextRequest) {
   // Check plan limit
   const { data: profile } = await supabase
     .from("profiles")
-    .select("keyword_limit")
+    .select("keyword_limit, plan")
     .eq("id", user.id)
     .single();
+
+  if (profile?.plan === "free") {
+    return NextResponse.json(
+      { error: "Upgrade to a paid plan to add keywords." },
+      { status: 403 }
+    );
+  }
 
   const { count } = await supabase
     .from("keywords")
@@ -47,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   if (profile && count !== null && count >= profile.keyword_limit) {
     return NextResponse.json(
-      { error: "Keyword limit reached. Upgrade to Pro for more keywords." },
+      { error: "Keyword limit reached. Upgrade your plan for more keywords." },
       { status: 403 }
     );
   }

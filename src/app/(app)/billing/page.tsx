@@ -100,11 +100,18 @@ function BillingContent() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
-              Keyword limit: {billing.keywordLimit}
-            </p>
+            {isPaid && (
+              <p className="text-sm text-muted-foreground">
+                Keyword limit: {billing.keywordLimit}
+              </p>
+            )}
             {!isPaid ? (
-              <Button onClick={() => handleCheckout("starter")}>Upgrade Now</Button>
+              <div className="space-y-2">
+                <p className="text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  Choose a plan below to start tracking keywords and discovering intent signals.
+                </p>
+                <Button onClick={() => handleCheckout("starter")}>Upgrade Now</Button>
+              </div>
             ) : (
               <Button variant="outline" onClick={handlePortal}>
                 Manage Subscription
@@ -114,18 +121,7 @@ function BillingContent() {
         </Card>
       )}
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-4xl">
-        <PlanCard
-          name="Free"
-          price={0}
-          isCurrent={billing?.plan === "free"}
-          features={[
-            "1 keyword to track",
-            "AI intent scoring",
-            "Basic dashboard",
-            "5-minute updates",
-          ]}
-        />
+      <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
         <PlanCard
           name="Starter"
           price={9}

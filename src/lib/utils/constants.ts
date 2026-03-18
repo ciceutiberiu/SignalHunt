@@ -1,7 +1,7 @@
 export const PLANS = {
   free: {
     name: "Free",
-    keywordLimit: 1,
+    keywordLimit: 0,
     price: 0,
   },
   starter: {

@@ -29,11 +29,22 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const admin = createAdminClient();
+
+  // Check if user has a paid plan
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("plan")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.plan === "free") {
+    return NextResponse.json({ error: "Upgrade to a paid plan to scan Reddit." }, { status: 403 });
+  }
+
   // Limit refreshes to 5 per hour per user
   const { success } = rateLimit(`refresh:${user.id}`, 5, 3_600_000);
   if (!success) return NextResponse.json({ error: "Too many refreshes. Try again later." }, { status: 429 });
-
-  const admin = createAdminClient();
 
   // Get this user's active keywords
   const { data: keywords } = await admin

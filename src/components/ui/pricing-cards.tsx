@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, MoveRight } from "lucide-react";
+import { useState } from "react";
+import { Check, MoveRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -11,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 interface PricingFeature {
   title: string;
@@ -21,12 +21,12 @@ interface PricingFeature {
 interface PricingTier {
   name: string;
   price: number;
+  plan: "starter" | "pro";
   description: string;
   features: PricingFeature[];
   buttonLabel: string;
   buttonVariant?: "default" | "outline";
   isPopular?: boolean;
-  href?: string;
 }
 
 interface PricingProps {
@@ -38,37 +38,19 @@ interface PricingProps {
 
 const defaultTiers: PricingTier[] = [
   {
-    name: "Free",
-    price: 0,
-    description:
-      "Perfect for trying out SignalHunt. Track one keyword and see how intent signals can help your business.",
-    features: [
-      {
-        title: "1 keyword to track",
-        description: "Monitor one keyword across all of Reddit.",
-      },
-      {
-        title: "AI intent scoring",
-        description: "Claude AI scores every post for buying intent.",
-      },
-      {
-        title: "Dashboard access",
-        description: "View, filter, and sort your signals.",
-      },
-    ],
-    buttonLabel: "Get started free",
-    buttonVariant: "outline",
-    href: "/signup",
-  },
-  {
     name: "Starter",
     price: 9,
+    plan: "starter",
     description:
-      "For indie hackers and solo founders ready to find more leads and grow faster.",
+      "For indie hackers and solo founders ready to find leads and grow faster.",
     features: [
       {
         title: "5 keywords to track",
         description: "Cast a wider net across Reddit communities.",
+      },
+      {
+        title: "AI intent scoring",
+        description: "Claude AI scores every post for real buying intent.",
       },
       {
         title: "Full dashboard & filters",
@@ -79,20 +61,24 @@ const defaultTiers: PricingTier[] = [
         description: "Bookmark leads and track your outreach progress.",
       },
     ],
-    buttonLabel: "Start Starter plan",
+    buttonLabel: "Get Started",
     buttonVariant: "default",
     isPopular: true,
-    href: "/signup",
   },
   {
     name: "Pro",
     price: 19,
+    plan: "pro",
     description:
       "For growing teams and agencies who need maximum coverage and lead volume.",
     features: [
       {
         title: "25 keywords to track",
         description: "Monitor your full product and competitor landscape.",
+      },
+      {
+        title: "Subreddit targeting",
+        description: "Focus on specific communities for higher signal quality.",
       },
       {
         title: "Notes & status tracking",
@@ -103,21 +89,39 @@ const defaultTiers: PricingTier[] = [
         description: "Get help fast when you need it.",
       },
     ],
-    buttonLabel: "Start Pro plan",
+    buttonLabel: "Get Started",
     buttonVariant: "outline",
-    href: "/signup",
   },
 ];
 
 function Pricing({
   badge = "Pricing",
   title = "Simple, honest pricing",
-  subtitle = "Start free. Upgrade when you need more signals. Cancel anytime.",
+  subtitle = "Pick a plan. Start hunting in minutes. Cancel anytime.",
   tiers = defaultTiers,
 }: PricingProps) {
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleCheckout = async (plan: string) => {
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch("/api/billing/create-checkout-public", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        window.location.href = url;
+      }
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="w-full py-20 lg:py-32">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
         <div className="flex text-center justify-center items-center gap-4 flex-col">
           <Badge>{badge}</Badge>
           <div className="flex gap-2 flex-col">
@@ -128,7 +132,7 @@ function Pricing({
               {subtitle}
             </p>
           </div>
-          <div className="grid pt-16 text-left grid-cols-1 lg:grid-cols-3 w-full gap-8">
+          <div className="grid pt-16 text-left grid-cols-1 lg:grid-cols-2 w-full gap-8 max-w-3xl">
             {tiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -165,16 +169,9 @@ function Pricing({
                         <span className="text-4xl font-bold">
                           ${tier.price}
                         </span>
-                        {tier.price > 0 && (
-                          <span className="text-sm text-muted-foreground">
-                            / month
-                          </span>
-                        )}
-                        {tier.price === 0 && (
-                          <span className="text-sm text-muted-foreground">
-                            forever
-                          </span>
-                        )}
+                        <span className="text-sm text-muted-foreground">
+                          / month
+                        </span>
                       </p>
                       <div className="flex flex-col gap-4 justify-start flex-1">
                         {tier.features.map((feature, i) => (
@@ -191,16 +188,22 @@ function Pricing({
                           </div>
                         ))}
                       </div>
-                      <Link href={tier.href || "/signup"}>
-                        <Button
-                          variant={tier.buttonVariant || "default"}
-                          className="gap-4 w-full"
-                          size="lg"
-                        >
-                          {tier.buttonLabel}{" "}
-                          <MoveRight className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                      <Button
+                        variant={tier.buttonVariant || "default"}
+                        className="gap-4 w-full"
+                        size="lg"
+                        onClick={() => handleCheckout(tier.plan)}
+                        disabled={loadingPlan !== null}
+                      >
+                        {loadingPlan === tier.plan ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            {tier.buttonLabel}{" "}
+                            <MoveRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

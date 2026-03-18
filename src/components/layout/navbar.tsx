@@ -32,7 +32,7 @@ export function Navbar() {
           <Link href="/login">
             <Button variant="ghost" size="sm">Log in</Button>
           </Link>
-          <Link href="/signup">
+          <Link href="/#pricing">
             <Button size="sm">Get Started</Button>
           </Link>
         </div>
@@ -50,7 +50,7 @@ export function Navbar() {
           <Link href="#faq" className="block text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>FAQ</Link>
           <div className="flex gap-2 pt-2">
             <Link href="/login"><Button variant="outline" size="sm">Log in</Button></Link>
-            <Link href="/signup"><Button size="sm">Get Started</Button></Link>
+            <Link href="/#pricing"><Button size="sm">Get Started</Button></Link>
           </div>
         </div>
       )}
