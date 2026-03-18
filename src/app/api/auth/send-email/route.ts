@@ -17,23 +17,21 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
 
     if (type === "signup") {
-      // User already created by signUp() — generate a magiclink to confirm email
+      // User already created by signUp() — generate a magiclink to confirm
       const { data, error } = await supabase.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: {
-          redirectTo: `${appUrl}/auth/callback?next=/dashboard`,
-        },
       });
 
-      if (error || !data?.properties?.action_link) {
+      if (error || !data?.properties?.hashed_token) {
         return NextResponse.json(
           { error: error?.message || "Failed to generate confirmation link" },
           { status: 500 }
         );
       }
 
-      await sendEmailConfirmationEmail(email, data.properties.action_link);
+      const confirmUrl = `${appUrl}/auth/confirm?token_hash=${data.properties.hashed_token}&type=magiclink&next=/dashboard`;
+      await sendEmailConfirmationEmail(email, confirmUrl);
       return NextResponse.json({ success: true });
     }
 
@@ -41,17 +39,15 @@ export async function POST(request: NextRequest) {
       const { data, error } = await supabase.auth.admin.generateLink({
         type: "recovery",
         email,
-        options: {
-          redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
-        },
       });
 
-      if (error || !data?.properties?.action_link) {
+      if (error || !data?.properties?.hashed_token) {
         // Don't reveal if email exists or not
         return NextResponse.json({ success: true });
       }
 
-      await sendPasswordResetEmail(email, data.properties.action_link);
+      const confirmUrl = `${appUrl}/auth/confirm?token_hash=${data.properties.hashed_token}&type=recovery&next=/reset-password`;
+      await sendPasswordResetEmail(email, confirmUrl);
       return NextResponse.json({ success: true });
     }
 

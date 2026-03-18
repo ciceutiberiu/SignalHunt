@@ -113,22 +113,22 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
 
   // Send branded welcome email via Resend for new users
   if (!existingUser) {
-    // Use recovery link so user can set their password on first login
+    // Generate a recovery link so user can set their password
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email: customerEmail,
-      options: {
-        redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
-      },
     });
 
-    if (linkError || !linkData?.properties?.action_link) {
-      throw new Error(`Failed to generate link: ${linkError?.message || "no link returned"}`);
+    if (linkError || !linkData?.properties?.hashed_token) {
+      throw new Error(`Failed to generate link: ${linkError?.message || "no token returned"}`);
     }
+
+    // Build link to our /auth/confirm route which uses verifyOtp
+    const confirmUrl = `${appUrl}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=recovery&next=/reset-password`;
 
     const { error: emailError } = await sendWelcomeInviteEmail(
       customerEmail,
-      linkData.properties.action_link,
+      confirmUrl,
       plan,
     );
 
