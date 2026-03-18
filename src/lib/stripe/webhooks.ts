@@ -35,12 +35,18 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
 
   // Stripe-first checkout (no auth) — create or upgrade user
   const customerEmail = session.customer_details?.email;
-  if (!customerEmail) return;
+  if (!customerEmail) {
+    throw new Error("No customer email in checkout session");
+  }
 
   const appUrl = process.env.APP_URL || "https://signal-hunt-fawn.vercel.app";
 
   // Check if user already exists
-  const { data: existingUsers } = await supabase.auth.admin.listUsers();
+  const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers();
+  if (listError) {
+    throw new Error(`Failed to list users: ${listError.message}`);
+  }
+
   const existingUser = existingUsers?.users?.find(
     (u) => u.email?.toLowerCase() === customerEmail.toLowerCase()
   );
@@ -58,8 +64,7 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
     );
 
     if (inviteError || !invited.user) {
-      console.error("Failed to invite user:", inviteError);
-      return;
+      throw new Error(`Failed to invite user: ${inviteError?.message || "no user returned"}`);
     }
 
     targetUserId = invited.user.id;
@@ -69,7 +74,7 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Update profile with paid plan
-  await supabase
+  const { error: updateError } = await supabase
     .from("profiles")
     .update({
       plan,
@@ -79,6 +84,10 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
       keyword_limit: PLANS[plan].keywordLimit,
     })
     .eq("id", targetUserId);
+
+  if (updateError) {
+    throw new Error(`Failed to update profile: ${updateError.message}`);
+  }
 }
 
 export async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
