@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
   }
 
   const stripe = getStripe();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    || (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : null)
+    || "https://signal-hunt-fawn.vercel.app";
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
