@@ -24,17 +24,19 @@ export default function SignupPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
 
     if (error) {
       setError(error.message);
     } else if (data.user?.identities?.length === 0) {
-      // Supabase returns a fake success for existing emails — detect it
       setError("An account with this email already exists. Please log in instead.");
     } else {
+      // Send branded confirmation email via Resend
+      await fetch("/api/auth/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, type: "signup" }),
+      });
       setSuccess(true);
     }
     setLoading(false);

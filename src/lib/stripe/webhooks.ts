@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PLANS, PlanKey } from "@/lib/utils/constants";
+import { sendWelcomeInviteEmail } from "@/lib/email/resend";
 
 const PRICE_TO_PLAN: Record<string, PlanKey> = {
   [process.env.STRIPE_STARTER_PRICE_ID!]: "starter",
@@ -57,36 +58,74 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
     // Existing user — just upgrade their plan
     targetUserId = existingUser.id;
   } else {
-    // New user — invite sends a "Set up your account" email automatically
-    const { data: invited, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-      customerEmail,
-      { redirectTo: `${appUrl}/auth/callback?next=/dashboard` }
-    );
+    // Create user via admin API (trigger creates profile)
+    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      email: customerEmail,
+      email_confirm: true,
+    });
 
-    if (inviteError || !invited.user) {
-      throw new Error(`Failed to invite user: ${inviteError?.message || "no user returned"}`);
+    if (createError || !newUser.user) {
+      throw new Error(`Failed to create user: ${createError?.message || "no user returned"}`);
     }
 
-    targetUserId = invited.user.id;
+    targetUserId = newUser.user.id;
 
-    // Wait briefly for the DB trigger to create the profile
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Wait for the DB trigger to create the profile row
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  // Update profile with paid plan
-  const { error: updateError } = await supabase
+  // Ensure profile exists (upsert in case trigger didn't fire)
+  const { data: existingProfile } = await supabase
     .from("profiles")
-    .update({
+    .select("id")
+    .eq("id", targetUserId)
+    .single();
+
+  if (!existingProfile) {
+    const { error: insertError } = await supabase.from("profiles").insert({
+      id: targetUserId,
+      email: customerEmail,
+      display_name: customerEmail.split("@")[0],
       plan,
       stripe_customer_id: session.customer as string,
       stripe_subscription_id: session.subscription as string,
       subscription_status: "active",
       keyword_limit: PLANS[plan].keywordLimit,
-    })
-    .eq("id", targetUserId);
+    });
+    if (insertError) {
+      throw new Error(`Failed to insert profile: ${insertError.message}`);
+    }
+  } else {
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        plan,
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: session.subscription as string,
+        subscription_status: "active",
+        keyword_limit: PLANS[plan].keywordLimit,
+      })
+      .eq("id", targetUserId);
+    if (updateError) {
+      throw new Error(`Failed to update profile: ${updateError.message}`);
+    }
+  }
 
-  if (updateError) {
-    throw new Error(`Failed to update profile: ${updateError.message}`);
+  // Send branded invite email via Resend for new users
+  if (!existingUser) {
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: "invite",
+      email: customerEmail,
+      options: {
+        redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
+      },
+    });
+
+    if (linkError || !linkData?.properties?.action_link) {
+      throw new Error(`Failed to generate invite link: ${linkError?.message || "no link returned"}`);
+    }
+
+    await sendWelcomeInviteEmail(customerEmail, linkData.properties.action_link, plan);
   }
 }
 
