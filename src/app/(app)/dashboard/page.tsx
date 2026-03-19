@@ -104,12 +104,14 @@ export default function DashboardPage() {
     setRefreshing(true);
     try {
       const res = await fetch("/api/signals/refresh", { method: "POST" });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
-        toast({ title: `Scan complete: ${data.signals_created ?? 0} new signals found` });
+        const msg = `Scan complete: ${data.signals_created ?? 0} new signals found`;
+        const desc = data.errors?.length ? `Errors: ${data.errors.join("; ")}` : undefined;
+        toast({ title: msg, description: desc, variant: data.errors?.length ? "destructive" : "default" });
         await fetchData();
       } else {
-        toast({ title: "Refresh failed", variant: "destructive" });
+        toast({ title: data.error || "Refresh failed", variant: "destructive" });
       }
     } catch {
       toast({ title: "Refresh failed", variant: "destructive" });

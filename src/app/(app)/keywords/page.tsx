@@ -54,7 +54,17 @@ export default function KeywordsPage() {
     if (res.ok) {
       const newKw = await res.json();
       setKeywords((prev) => [newKw, ...prev]);
-      toast({ title: `Keyword "${keyword}" added` });
+      toast({ title: `Keyword "${keyword}" added — scanning Reddit...` });
+
+      // Auto-scan after adding keyword
+      fetch("/api/signals/refresh", { method: "POST" })
+        .then((r) => r.json())
+        .then((data) => {
+          const count = data.signals_created ?? 0;
+          toast({ title: `Scan complete: ${count} signals found` });
+        })
+        .catch(() => {});
+
       return true;
     }
 

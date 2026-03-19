@@ -54,11 +54,12 @@ export async function POST() {
     .eq("is_active", true);
 
   if (!keywords?.length) {
-    return NextResponse.json({ message: "No active keywords" });
+    return NextResponse.json({ signals_created: 0, message: "No active keywords" });
   }
 
   let signalsCreated = 0;
   const newSignalIds: string[] = [];
+  const errors: string[] = [];
 
   for (const kw of keywords.slice(0, 5)) {
     const keyword = kw.keyword;
@@ -117,8 +118,10 @@ export async function POST() {
             { onConflict: "user_id,signal_id", ignoreDuplicates: true }
           );
       }
-    } catch {
-      // Skip failed keywords silently
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      errors.push(`"${keyword}": ${msg}`);
+      console.error(`Reddit search failed for "${keyword}":`, msg);
     }
   }
 
@@ -146,10 +149,16 @@ export async function POST() {
             .eq("id", result.id);
         }
       }
-    } catch {
-      // Classification can fail - signals are still created
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      errors.push(`Classification: ${msg}`);
+      console.error("Classification failed:", msg);
     }
   }
 
-  return NextResponse.json({ signals_created: signalsCreated });
+  return NextResponse.json({
+    signals_created: signalsCreated,
+    keywords_scanned: keywords.length,
+    ...(errors.length > 0 && { errors }),
+  });
 }
